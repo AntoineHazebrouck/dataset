@@ -41,7 +41,7 @@ public class Dataset
 						List<String> fields = Stream.of(line.split(delimiter))
 								.toList();
 						Row newRow = Row.of(fields)
-								.withColumns(columns);
+								.withColumns(myColumns);
 						rows.add(newRow);
 					}
 					return rows;

@@ -13,16 +13,21 @@ import org.junit.jupiter.api.Test;
 
 public class DatasetTest
 {
-	private BiFunction<List<String>, List<String>, List<Row>> linesToRows = (lines, columns) -> {
-		List<Row> rows = new ArrayList<>();
-		for (String line : lines)
-		{
-			rows.add(getRowFromLine(line, columns));
-		}
-		return rows;
-	};
+	BiFunction<List<String>, List<String>, List<Row>> linesToRows =
+			(myLines, myColumns) -> {
+				List<Row> rows = new ArrayList<>();
+				for (String line : myLines)
+				{
+					List<String> fields = Stream.of(line.split(","))
+							.toList();
+					Row newRow = Row.of(fields)
+							.withColumns(myColumns);
+					rows.add(newRow);
+				}
+				return rows;
+			};
 
-	private Function<List<Row>, List<Row>> removeHeaders = (rows) -> {
+	Function<List<Row>, List<Row>> removeHeaders = (rows) -> {
 		rows.remove(0);
 		return rows;
 	};
@@ -40,8 +45,9 @@ public class DatasetTest
 		List<String> firstCsvRow = Stream.of(lines.get(1)
 				.split(","))
 				.toList();
-		List<Row> rows = linesToRows.andThen(removeHeaders).apply(lines, columns);
-		
+		List<Row> rows = linesToRows.andThen(removeHeaders)
+				.apply(lines, columns);
+
 
 		Dataset dataset = Dataset.fromCsv("src/test/resources/cities.csv", ",");
 
@@ -55,11 +61,5 @@ public class DatasetTest
 				.get(columns.get(0))).isEqualTo(firstCsvRow.get(0));
 	}
 
-	private Row getRowFromLine(String line, List<String> columns)
-	{
-		List<String> fields = Stream.of(line.split(","))
-				.toList();
-		return Row.of(fields)
-				.withColumns(columns);
-	}
+	
 }
