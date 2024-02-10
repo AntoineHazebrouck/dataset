@@ -10,7 +10,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
-import lombok.val;
 
 public class DatasetTest
 {
@@ -31,30 +30,29 @@ public class DatasetTest
 	@Test
 	void loading_a_dataset_of_rows_from_csv() throws IOException
 	{
-		val csv = Files.readString(Path.of("src/test/resources/cities.csv"));
+		String csv = Files.readString(Path.of("src/test/resources/cities.csv"));
 
 		List<String> lines = csv.lines()
 				.toList();
 		List<String> columns = Stream.of(lines.get(0)
 				.split(","))
 				.toList();
-		List<String> firsCsvRow = Stream.of(lines.get(1)
+		List<String> firstCsvRow = Stream.of(lines.get(1)
 				.split(","))
 				.toList();
-
 		List<Row> rows = linesToRows.andThen(removeHeaders).apply(lines, columns);
 		
 
-		Dataset dataset = Dataset.of(rows);
+		Dataset dataset = Dataset.fromCsv("src/test/resources/cities.csv", ",");
 
 		assertThat(dataset.size()).isEqualTo(rows.size());
 
 		assertThat(dataset.row(0)
-				.fields()).hasSameElementsAs(firsCsvRow);
+				.fields()).hasSameElementsAs(firstCsvRow);
 		assertThat(dataset.row(0)
 				.columns()).hasSameElementsAs(columns);
 		assertThat(dataset.row(0)
-				.get(columns.get(0))).isEqualTo(firsCsvRow.get(0));
+				.get(columns.get(0))).isEqualTo(firstCsvRow.get(0));
 	}
 
 	private Row getRowFromLine(String line, List<String> columns)
