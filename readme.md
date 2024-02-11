@@ -12,8 +12,9 @@ TODO
 
 DOING
 
-- .select
+- .where
 
 DONE
 
+- .select
 - load a csv file into a Dataset of Row (only Row for now)
