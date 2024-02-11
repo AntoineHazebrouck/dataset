@@ -9,6 +9,7 @@ TODO
 - .map on Dataset
 - .reduce on Dataset
 - .groupby
+- .unique
 
 DOING
 

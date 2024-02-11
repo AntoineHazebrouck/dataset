@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test;
 
 public class DatasetTest
 {
+	private static final String CITY = " \"City\"";
+
 	BiFunction<List<String>, List<String>, List<Row>> linesToRows =
 			(myLines, myColumns) -> {
 				List<Row> rows = new ArrayList<>();
@@ -63,11 +65,12 @@ public class DatasetTest
 	}
 
 	@Test
-	void select_columns() throws IOException {
+	void select_columns() throws IOException
+	{
 		String csv = Files.readString(Path.of("src/test/resources/cities.csv"));
 		List<String> lines = csv.lines()
 				.toList();
-				List<String> firstCsvRow = Stream.of(lines.get(1)
+		List<String> firstCsvRow = Stream.of(lines.get(1)
 				.split(","))
 				.toList();
 		List<String> columns = Stream.of(lines.get(0)
@@ -81,11 +84,13 @@ public class DatasetTest
 
 		List<String> chosenColumns = columns.subList(0, 2);
 		Dataset projection = dataset.select(chosenColumns);
-		
-		assertThat(projection.columns().size()).isEqualTo(chosenColumns.size());
+
+		assertThat(projection.columns()
+				.size()).isEqualTo(chosenColumns.size());
 		assertThat(projection.columns()).hasSameElementsAs(chosenColumns);
 
-		assertThat(projection.row(0).get(chosenColumns.get(0))).isEqualTo(firstCsvRow.get(0));
+		assertThat(projection.row(0)
+				.get(chosenColumns.get(0))).isEqualTo(firstCsvRow.get(0));
 	}
 
 	@Test
@@ -96,5 +101,22 @@ public class DatasetTest
 		assertThatThrownBy(() -> {
 			dataset.select("a non existing column");
 		}).isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	void filtering_lines() throws IOException
+	{
+		Dataset dataset = Dataset.fromCsv("src/test/resources/cities.csv", ",");
+
+		String aCity = dataset.row(0)
+				.get(CITY);
+
+		Dataset filtered = dataset.where(row -> row.get(CITY)
+				.equals(aCity));
+
+
+		assertThat(filtered.size() == 1);
+		assertThat(filtered.row(0)
+				.get(CITY)).isEqualTo(aCity);
 	}
 }

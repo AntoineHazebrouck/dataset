@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class Dataset
@@ -88,7 +89,7 @@ public class Dataset
 					.withColumns(chosenColumns)
 			)
 			.toList();
-		return new Dataset(projectedRows, chosenColumns);
+		return Dataset.of(projectedRows, chosenColumns);
 	}
 
 	public List<Row> rows()
@@ -131,5 +132,13 @@ public class Dataset
 			newLine.run();
 		}
 		return builder.toString();
+	}
+
+	public Dataset where(Predicate<Row> predicate)
+	{
+		List<Row> filtered = rows().stream()
+			.filter(predicate)
+			.toList();
+		return Dataset.of(filtered, columns());
 	}
 }
