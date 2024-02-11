@@ -52,7 +52,7 @@ public class DatasetTest
 				.apply(lines, columns);
 
 
-		Dataset dataset = Dataset.fromCsv("src/test/resources/cities.csv", ",");
+		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
 
 		assertThat(dataset.size()).isEqualTo(rows.size());
 
@@ -77,13 +77,13 @@ public class DatasetTest
 				.split(","))
 				.toList();
 
-		Dataset dataset = Dataset.fromCsv("src/test/resources/cities.csv", ",");
+		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
 
 		assertThat(dataset.columns()).hasSameElementsAs(columns);
 
 
 		List<String> chosenColumns = columns.subList(0, 2);
-		Dataset projection = dataset.select(chosenColumns);
+		DataFrame projection = dataset.select(chosenColumns);
 
 		assertThat(projection.columns()
 				.size()).isEqualTo(chosenColumns.size());
@@ -96,7 +96,7 @@ public class DatasetTest
 	@Test
 	void select_non_existing_columns() throws IOException
 	{
-		Dataset dataset = Dataset.fromCsv("src/test/resources/cities.csv", ",");
+		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
 
 		assertThatThrownBy(() -> {
 			dataset.select("a non existing column");
@@ -106,12 +106,12 @@ public class DatasetTest
 	@Test
 	void filtering_lines() throws IOException
 	{
-		Dataset dataset = Dataset.fromCsv("src/test/resources/cities.csv", ",");
+		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
 
 		String aCity = dataset.row(0)
 				.get(CITY);
 
-		Dataset filtered = dataset.where(row -> row.get(CITY)
+		DataFrame filtered = dataset.where(row -> row.get(CITY)
 				.equals(aCity));
 
 
