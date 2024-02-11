@@ -1,6 +1,7 @@
 package jez;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -61,5 +62,39 @@ public class DatasetTest
 				.get(columns.get(0))).isEqualTo(firstCsvRow.get(0));
 	}
 
-	
+	@Test
+	void select_columns() throws IOException {
+		String csv = Files.readString(Path.of("src/test/resources/cities.csv"));
+		List<String> lines = csv.lines()
+				.toList();
+				List<String> firstCsvRow = Stream.of(lines.get(1)
+				.split(","))
+				.toList();
+		List<String> columns = Stream.of(lines.get(0)
+				.split(","))
+				.toList();
+
+		Dataset dataset = Dataset.fromCsv("src/test/resources/cities.csv", ",");
+
+		assertThat(dataset.columns()).hasSameElementsAs(columns);
+
+
+		List<String> chosenColumns = columns.subList(0, 2);
+		Dataset projection = dataset.select(chosenColumns);
+		
+		assertThat(projection.columns().size()).isEqualTo(chosenColumns.size());
+		assertThat(projection.columns()).hasSameElementsAs(chosenColumns);
+
+		assertThat(projection.row(0).get(chosenColumns.get(0))).isEqualTo(firstCsvRow.get(0));
+	}
+
+	@Test
+	void select_non_existing_columns() throws IOException
+	{
+		Dataset dataset = Dataset.fromCsv("src/test/resources/cities.csv", ",");
+
+		assertThatThrownBy(() -> {
+			dataset.select("a non existing column");
+		}).isInstanceOf(IllegalArgumentException.class);
+	}
 }

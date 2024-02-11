@@ -12,15 +12,17 @@ import java.util.stream.Stream;
 public class Dataset
 {
 	private final List<Row> rows;
+	private final List<String> columns;
 
-	private Dataset(List<Row> rows)
+	private Dataset(List<Row> rows, List<String> columns)
 	{
 		this.rows = rows;
+		this.columns = columns;
 	}
 
-	public static Dataset of(List<Row> rows)
+	public static Dataset of(List<Row> rows, List<String> columns)
 	{
-		return new Dataset(rows);
+		return new Dataset(rows, columns);
 	}
 
 	public static Dataset fromCsv(String path, String delimiter) throws IOException
@@ -54,7 +56,7 @@ public class Dataset
 
 		List<Row> rows = linesToRows.andThen(removeHeaders).apply(lines, columns);
 
-		return Dataset.of(rows);
+		return Dataset.of(rows, columns);
 	}
 
 	public int size()
@@ -67,4 +69,25 @@ public class Dataset
 		return rows.get(index);
 	}
 
+	public List<String> columns()
+	{
+		return this.columns;
+	}
+
+	public Dataset select(String... chosenColumns)
+	{
+		return select(Stream.of(chosenColumns).toList());
+	}
+
+	public Dataset select(List<String> chosenColumns)
+	{
+		if (!columns().containsAll(chosenColumns))
+			throw new IllegalArgumentException("A column does not exist");
+		List<Row> projectedRows = rows.stream()
+			.map(row -> Row.of(row.get(chosenColumns))
+					.withColumns(chosenColumns)
+			)
+			.toList();
+		return new Dataset(projectedRows, chosenColumns);
+	}
 }

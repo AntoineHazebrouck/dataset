@@ -8,6 +8,7 @@ TODO
 - generics and types in Row
 - .map on Dataset
 - .reduce on Dataset
+- .groupby
 
 DOING
 

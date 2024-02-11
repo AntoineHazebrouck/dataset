@@ -30,4 +30,10 @@ public class Row {
 		return data.get(columnName);
 	}
 
+	public List<String> get(List<String> columnNames) {
+		return data.entrySet().stream()
+			.filter(entry -> columnNames.contains(entry.getKey()))
+			.map(entry -> entry.getValue())
+			.toList();
+	}
 }
