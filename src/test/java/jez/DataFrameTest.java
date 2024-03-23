@@ -108,7 +108,7 @@ public class DataFrameTest
 	{
 		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
 
-		String aCity = dataset.row(0)
+		String aCity = dataset.row(42)
 				.get(CITY);
 
 		DataFrame filtered = dataset.where(row -> row.get(CITY)
@@ -118,5 +118,22 @@ public class DataFrameTest
 		assertThat(filtered.size() == 1);
 		assertThat(filtered.row(0)
 				.get(CITY)).isEqualTo(aCity);
+	}
+
+	@Test
+	void unique_on_all_columns() throws IOException {
+		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
+		
+		assertThat(dataset.size()).isEqualTo(129);
+
+		dataset = dataset.unique();
+
+		assertThat(dataset.size()).isEqualTo(128);
+		assertThat(dataset.columns().size()).isEqualTo(10);
+	}
+
+	@Test
+	void unique_on_given_column() {
+
 	}
 }

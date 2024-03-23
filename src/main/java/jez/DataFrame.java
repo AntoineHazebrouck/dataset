@@ -141,4 +141,9 @@ public class DataFrame
 			.toList();
 		return DataFrame.of(filtered, columns());
 	}
+
+	public DataFrame unique()
+	{
+		return DataFrame.of(rows.stream().distinct().toList(), columns);
+	}
 }

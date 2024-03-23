@@ -2,7 +2,9 @@ package jez;
 
 import java.util.List;
 import java.util.Map;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode
 public class Row {
 	private final Map<String, String> data; // column name, field
 
