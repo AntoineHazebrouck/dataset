@@ -7,7 +7,7 @@ public class Application
 
 	public static void main(String[] args) throws IOException
 	{
-		Dataset dataset = Dataset.fromCsv("src/test/resources/cities.csv", ",");
+		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
 
 		// String horizontal = dataset.columns()
 		// 		.stream()

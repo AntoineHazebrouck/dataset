@@ -10,23 +10,23 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public class Dataset
+public class DataFrame
 {
 	private final List<Row> rows;
 	private final List<String> columns;
 
-	private Dataset(List<Row> rows, List<String> columns)
+	private DataFrame(List<Row> rows, List<String> columns)
 	{
 		this.rows = rows;
 		this.columns = columns;
 	}
 
-	public static Dataset of(List<Row> rows, List<String> columns)
+	public static DataFrame of(List<Row> rows, List<String> columns)
 	{
-		return new Dataset(rows, columns);
+		return new DataFrame(rows, columns);
 	}
 
-	public static Dataset fromCsv(String path, String delimiter) throws IOException
+	public static DataFrame fromCsv(String path, String delimiter) throws IOException
 	{
 		String csv = Files.readString(Path.of(path));
 		List<String> lines = csv.lines()
@@ -57,7 +57,7 @@ public class Dataset
 
 		List<Row> rows = linesToRows.andThen(removeHeaders).apply(lines, columns);
 
-		return Dataset.of(rows, columns);
+		return DataFrame.of(rows, columns);
 	}
 
 	public int size()
@@ -75,12 +75,12 @@ public class Dataset
 		return this.columns;
 	}
 
-	public Dataset select(String... chosenColumns)
+	public DataFrame select(String... chosenColumns)
 	{
 		return select(Stream.of(chosenColumns).toList());
 	}
 
-	public Dataset select(List<String> chosenColumns)
+	public DataFrame select(List<String> chosenColumns)
 	{
 		if (!columns().containsAll(chosenColumns))
 			throw new IllegalArgumentException("A column does not exist");
@@ -89,7 +89,7 @@ public class Dataset
 					.withColumns(chosenColumns)
 			)
 			.toList();
-		return Dataset.of(projectedRows, chosenColumns);
+		return DataFrame.of(projectedRows, chosenColumns);
 	}
 
 	public List<Row> rows()
@@ -134,11 +134,11 @@ public class Dataset
 		return builder.toString();
 	}
 
-	public Dataset where(Predicate<Row> predicate)
+	public DataFrame where(Predicate<Row> predicate)
 	{
 		List<Row> filtered = rows().stream()
 			.filter(predicate)
 			.toList();
-		return Dataset.of(filtered, columns());
+		return DataFrame.of(filtered, columns());
 	}
 }
