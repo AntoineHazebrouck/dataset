@@ -146,4 +146,9 @@ public class DataFrame
 	{
 		return DataFrame.of(rows.stream().distinct().toList(), columns);
 	}
+
+	public DataFrame unique(String on)
+	{
+		return this.select(on).unique();
+	}
 }

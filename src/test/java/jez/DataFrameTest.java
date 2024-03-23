@@ -133,7 +133,15 @@ public class DataFrameTest
 	}
 
 	@Test
-	void unique_on_given_column() {
+	void unique_on_given_column() throws IOException {
+		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
+		
+		assertThat(dataset.size()).isEqualTo(129);
 
+		dataset = dataset.unique(CITY);
+
+		assertThat(dataset.size()).isEqualTo(120);
+		assertThat(dataset.columns().size()).isEqualTo(1);
+		assertThat(dataset.columns().get(0)).isEqualTo(CITY);
 	}
 }
