@@ -151,4 +151,9 @@ public class DataFrame
 	{
 		return this.select(on).unique();
 	}
+
+	public DataFrame map(Function<Row, Row> mapping) {
+
+		return DataFrame.of(rows.stream().map(mapping).toList(), columns);
+	}
 }

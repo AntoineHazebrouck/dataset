@@ -4,18 +4,17 @@
 
 TODO
 
-- generics in Dataset
-- generics and types in Row
-- .map on Dataset
-- .reduce on Dataset
+- types in Row
 - .groupby
 
 DOING
 
-- .unique
+- .reduce on Dataset
 
 DONE
 
+- .map on Dataset
+- .unique
 - .where
 - .select
 - load a csv file into a Dataset of Row (only Row for now)

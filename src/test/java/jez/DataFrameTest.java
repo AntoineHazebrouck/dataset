@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 public class DataFrameTest
 {
 	private static final String CITY = " \"City\"";
+	private static final String LAT_D = "\"LatD\"";
 
 	BiFunction<List<String>, List<String>, List<Row>> linesToRows =
 			(myLines, myColumns) -> {
@@ -121,27 +122,42 @@ public class DataFrameTest
 	}
 
 	@Test
-	void unique_on_all_columns() throws IOException {
+	void unique_on_all_columns() throws IOException
+	{
 		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
-		
+
 		assertThat(dataset.size()).isEqualTo(129);
 
 		dataset = dataset.unique();
 
 		assertThat(dataset.size()).isEqualTo(128);
-		assertThat(dataset.columns().size()).isEqualTo(10);
+		assertThat(dataset.columns()
+				.size()).isEqualTo(10);
 	}
 
 	@Test
-	void unique_on_given_column() throws IOException {
+	void unique_on_given_column() throws IOException
+	{
 		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
-		
+
 		assertThat(dataset.size()).isEqualTo(129);
 
 		dataset = dataset.unique(CITY);
 
 		assertThat(dataset.size()).isEqualTo(120);
-		assertThat(dataset.columns().size()).isEqualTo(1);
-		assertThat(dataset.columns().get(0)).isEqualTo(CITY);
+		assertThat(dataset.columns()
+				.size()).isEqualTo(1);
+		assertThat(dataset.columns()
+				.get(0)).isEqualTo(CITY);
+	}
+
+	@Test
+	void map() throws IOException
+	{
+		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
+
+		dataset = dataset.map(row -> row.transform(LAT_D, value -> "" + Integer.parseInt(value.strip()) * 2));
+
+		assertThat(dataset.row(0).get(LAT_D)).isEqualTo("82");
 	}
 }

@@ -47,4 +47,13 @@ public class RowTest {
 
 		}).isInstanceOf(IllegalArgumentException.class);
 	}
+
+	@Test
+	void transform_row() throws IOException {
+		Row row = Row.of(List.of("id1", "42")).withColumns(List.of("id", "value"));
+		
+		row = row.transform("value", value -> "" + Integer.parseInt(value) * 2);
+
+		assertThat(row.get("value")).isEqualTo("84");
+	}
 }
