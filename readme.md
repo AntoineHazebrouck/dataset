@@ -4,15 +4,17 @@
 
 TODO
 
-- types in Row
+- .select(col) returns a single column
+- reduce on column
 - .groupby
 
 DOING
 
-- .reduce on Dataset
+- types in Row
 
 DONE
 
+- .reduce on Dataset
 - .map on Dataset
 - .unique
 - .where

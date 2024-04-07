@@ -12,24 +12,21 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
-public class DataFrameTest
-{
+public class DataFrameTest {
 	private static final String CITY = " \"City\"";
 	private static final String LAT_D = "\"LatD\"";
 
-	BiFunction<List<String>, List<String>, List<Row>> linesToRows =
-			(myLines, myColumns) -> {
-				List<Row> rows = new ArrayList<>();
-				for (String line : myLines)
-				{
-					List<String> fields = Stream.of(line.split(","))
-							.toList();
-					Row newRow = Row.of(fields)
-							.withColumns(myColumns);
-					rows.add(newRow);
-				}
-				return rows;
-			};
+	BiFunction<List<String>, List<String>, List<Row>> linesToRows = (myLines, myColumns) -> {
+		List<Row> rows = new ArrayList<>();
+		for (String line : myLines) {
+			List<String> fields = Stream.of(line.split(","))
+					.toList();
+			Row newRow = Row.of(fields)
+					.withColumns(myColumns);
+			rows.add(newRow);
+		}
+		return rows;
+	};
 
 	Function<List<Row>, List<Row>> removeHeaders = (rows) -> {
 		rows.remove(0);
@@ -37,8 +34,7 @@ public class DataFrameTest
 	};
 
 	@Test
-	void loading_a_dataset_of_rows_from_csv() throws IOException
-	{
+	void loading_a_dataset_of_rows_from_csv() throws IOException {
 		String csv = Files.readString(Path.of("src/test/resources/cities.csv"));
 
 		List<String> lines = csv.lines()
@@ -51,7 +47,6 @@ public class DataFrameTest
 				.toList();
 		List<Row> rows = linesToRows.andThen(removeHeaders)
 				.apply(lines, columns);
-
 
 		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
 
@@ -66,8 +61,7 @@ public class DataFrameTest
 	}
 
 	@Test
-	void select_columns() throws IOException
-	{
+	void select_columns() throws IOException {
 		String csv = Files.readString(Path.of("src/test/resources/cities.csv"));
 		List<String> lines = csv.lines()
 				.toList();
@@ -82,7 +76,6 @@ public class DataFrameTest
 
 		assertThat(dataset.columns()).hasSameElementsAs(columns);
 
-
 		List<String> chosenColumns = columns.subList(0, 2);
 		DataFrame projection = dataset.select(chosenColumns);
 
@@ -95,8 +88,7 @@ public class DataFrameTest
 	}
 
 	@Test
-	void select_non_existing_columns() throws IOException
-	{
+	void select_non_existing_columns() throws IOException {
 		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
 
 		assertThatThrownBy(() -> {
@@ -105,8 +97,7 @@ public class DataFrameTest
 	}
 
 	@Test
-	void filtering_lines() throws IOException
-	{
+	void filtering_lines() throws IOException {
 		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
 
 		String aCity = dataset.row(42)
@@ -115,15 +106,13 @@ public class DataFrameTest
 		DataFrame filtered = dataset.where(row -> row.get(CITY)
 				.equals(aCity));
 
-
 		assertThat(filtered.size() == 1);
 		assertThat(filtered.row(0)
 				.get(CITY)).isEqualTo(aCity);
 	}
 
 	@Test
-	void unique_on_all_columns() throws IOException
-	{
+	void unique_on_all_columns() throws IOException {
 		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
 
 		assertThat(dataset.size()).isEqualTo(129);
@@ -136,8 +125,7 @@ public class DataFrameTest
 	}
 
 	@Test
-	void unique_on_given_column() throws IOException
-	{
+	void unique_on_given_column() throws IOException {
 		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
 
 		assertThat(dataset.size()).isEqualTo(129);
@@ -152,12 +140,32 @@ public class DataFrameTest
 	}
 
 	@Test
-	void map() throws IOException
-	{
+	void map() throws IOException {
 		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
 
-		dataset = dataset.map(row -> row.transform(LAT_D, value -> "" + Integer.parseInt(value.strip()) * 2));
+		dataset = dataset.map(row -> row
+				.transform(LAT_D, value -> "" + Integer.parseInt(value.strip()) * 2));
 
-		assertThat(dataset.row(0).get(LAT_D)).isEqualTo("82");
+		assertThat(dataset.row(0)
+				.get(LAT_D)).isEqualTo("82");
+	}
+
+	@Test
+	void reduce() throws IOException {
+		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
+
+		String columnSum = dataset.reduce(
+				(accumulator, row) -> accumulator.transform(
+						LAT_D, 
+						value -> "" + (
+							Integer.parseInt(value.strip()) + 
+							Integer.parseInt(row.get(LAT_D).strip())
+						)
+				)
+		)
+		.get()
+		.get(LAT_D);
+
+		assertThat(columnSum).isEqualTo("5010");
 	}
 }

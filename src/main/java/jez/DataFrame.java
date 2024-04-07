@@ -5,7 +5,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -155,5 +157,10 @@ public class DataFrame
 	public DataFrame map(Function<Row, Row> mapping) {
 
 		return DataFrame.of(rows.stream().map(mapping).toList(), columns);
+	}
+
+	public Optional<Row> reduce(BinaryOperator<Row> accumulator) {
+		return this.rows().stream()
+			.reduce(accumulator);
 	}
 }
