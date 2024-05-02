@@ -1,65 +1,30 @@
 package jez;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+import jez.builders.CsvDataFrameBuilder;
+import jez.builders.DataFrameBuilder;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class DataFrame
 {
 	private final List<Row> rows;
 	private final List<String> columns;
 
-	private DataFrame(List<Row> rows, List<String> columns)
+	public static DataFrameBuilder of(List<Row> rows)
 	{
-		this.rows = rows;
-		this.columns = columns;
+		return new DataFrameBuilder(rows);
 	}
 
-	public static DataFrame of(List<Row> rows, List<String> columns)
+	public static CsvDataFrameBuilder fromCsv(String path) throws IOException
 	{
-		return new DataFrame(rows, columns);
-	}
-
-	public static DataFrame fromCsv(String path, String delimiter) throws IOException
-	{
-		String csv = Files.readString(Path.of(path));
-		List<String> lines = csv.lines()
-				.toList();
-		List<String> columns = Stream.of(lines.get(0)
-				.split(delimiter))
-				.toList();
-
-
-		BiFunction<List<String>, List<String>, List<Row>> linesToRows =
-				(myLines, myColumns) -> {
-					List<Row> rows = new ArrayList<>();
-					for (String line : myLines)
-					{
-						List<String> fields = Stream.of(line.split(delimiter))
-								.toList();
-						Row newRow = Row.of(fields)
-								.withColumns(myColumns);
-						rows.add(newRow);
-					}
-					return rows;
-				};
-
-		Function<List<Row>, List<Row>> removeHeaders = (rows) -> {
-			rows.remove(0);
-			return rows;
-		};
-
-		List<Row> rows = linesToRows.andThen(removeHeaders).apply(lines, columns);
-
-		return DataFrame.of(rows, columns);
+		return new CsvDataFrameBuilder(path);
 	}
 
 	public int size()
@@ -79,7 +44,8 @@ public class DataFrame
 
 	public DataFrame select(String... chosenColumns)
 	{
-		return select(Stream.of(chosenColumns).toList());
+		return select(Stream.of(chosenColumns)
+				.toList());
 	}
 
 	public DataFrame select(List<String> chosenColumns)
@@ -87,11 +53,11 @@ public class DataFrame
 		if (!columns().containsAll(chosenColumns))
 			throw new IllegalArgumentException("A column does not exist");
 		List<Row> projectedRows = rows.stream()
-			.map(row -> Row.of(row.get(chosenColumns))
-					.withColumns(chosenColumns)
-			)
-			.toList();
-		return DataFrame.of(projectedRows, chosenColumns);
+				.map(row -> Row.of(row.get(chosenColumns))
+						.withColumns(chosenColumns))
+				.toList();
+		return DataFrame.of(projectedRows)
+				.with(chosenColumns);
 	}
 
 	public List<Row> rows()
@@ -102,10 +68,10 @@ public class DataFrame
 	@Override
 	public String toString()
 	{
-		
+
 		StringBuilder builder = new StringBuilder();
 		Runnable newLine = () -> builder.append("\n");
-		
+
 		String horizontal = this.columns()
 				.stream()
 				.map(col -> "-".repeat(col.length()))
@@ -124,7 +90,8 @@ public class DataFrame
 		builder.append(horizontal);
 		newLine.run();
 
-		for (Row row : this.rows()) {
+		for (Row row : this.rows())
+		{
 			for (String column : this.columns())
 			{
 				builder.append("|");
@@ -139,28 +106,39 @@ public class DataFrame
 	public DataFrame where(Predicate<Row> predicate)
 	{
 		List<Row> filtered = rows().stream()
-			.filter(predicate)
-			.toList();
-		return DataFrame.of(filtered, columns());
+				.filter(predicate)
+				.toList();
+		return DataFrame.of(filtered)
+				.with(columns);
 	}
 
 	public DataFrame unique()
 	{
-		return DataFrame.of(rows.stream().distinct().toList(), columns);
+		return DataFrame.of(rows.stream()
+				.distinct()
+				.toList())
+				.with(columns);
 	}
 
 	public DataFrame unique(String on)
 	{
-		return this.select(on).unique();
+		return this.select(on)
+				.unique();
 	}
 
-	public DataFrame map(Function<Row, Row> mapping) {
+	public DataFrame map(Function<Row, Row> mapping)
+	{
 
-		return DataFrame.of(rows.stream().map(mapping).toList(), columns);
+		return DataFrame.of(rows.stream()
+				.map(mapping)
+				.toList())
+				.with(columns);
 	}
 
-	public Optional<Row> reduce(BinaryOperator<Row> accumulator) {
-		return this.rows().stream()
-			.reduce(accumulator);
+	public Optional<Row> reduce(BinaryOperator<Row> accumulator)
+	{
+		return this.rows()
+				.stream()
+				.reduce(accumulator);
 	}
 }

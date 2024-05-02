@@ -4,18 +4,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.function.Function;
+import jez.builders.RowBuilder;
 import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @EqualsAndHashCode
-public class Row {
-	private final Map<String, String> data; // column name, field
+public class Row
+{
+	private final Map<String, FieldValue> data;
 
-	protected Row(Map<String, String> data) {
-		this.data = data;
-	}
-
-	public static RowBuilder of(List<String> fields)
+	public static RowBuilder of(List<FieldValue> fields)
 	{
 		return new RowBuilder(fields);
 	}
@@ -25,30 +27,37 @@ public class Row {
 		return new ArrayList<>(data.keySet());
 	}
 
-	public List<String> fields()
+	public List<FieldValue> fields()
 	{
 		return new ArrayList<>(data.values());
 	}
 
-	public String get(String columnName)
+	public FieldValue get(String columnName)
 	{
 		return data.get(columnName);
 	}
 
-	public List<String> get(List<String> columnNames) {
-		return data.entrySet().stream()
-			.filter(entry -> columnNames.contains(entry.getKey()))
-			.map(entry -> entry.getValue())
-			.toList();
+	public List<FieldValue> get(List<String> columnNames)
+	{
+		List<FieldValue> fields = new ArrayList<>();
+		Set<Entry<String, FieldValue>> entryset = data.entrySet();
+		for (Entry<String, FieldValue> entry : entryset)
+		{
+			if (columnNames.contains(entry.getKey()))
+			{
+				fields.add(entry.getValue());
+			}
+		}
+		return fields;
 	}
 
-	public Row transform(String onColumn, Function<String, String> transformation)
+	public Row transform(String onColumn, Function<FieldValue, FieldValue> transformation)
 	{
-		String toTransform = get(onColumn);
-		String transformed = transformation.apply(toTransform);
-		Map<String, String> transformedData = new HashMap<>(data);
+		FieldValue toTransform = get(onColumn);
+		FieldValue transformed = transformation.apply(toTransform);
+		Map<String, FieldValue> transformedData = new HashMap<>(data);
 		transformedData.replace(onColumn, toTransform, transformed);
-		
+
 		return new Row(transformedData);
 	}
 }

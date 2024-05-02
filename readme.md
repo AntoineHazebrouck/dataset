@@ -10,10 +10,11 @@ TODO
 
 DOING
 
-- types in Row
 
 DONE
 
+- types in Row
+	- load csv file with types
 - .reduce on Dataset
 - .map on Dataset
 - .unique

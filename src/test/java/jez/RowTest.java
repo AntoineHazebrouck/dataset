@@ -11,33 +11,49 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import lombok.val;
 
-public class RowTest {
+public class RowTest
+{
 	@Test
-	void row_from_a_line() throws IOException {
+	void row_from_a_line() throws IOException
+	{
 		val csv = Files.readString(Path.of("src/test/resources/cities.csv"));
 
-		List<String> lines = csv.lines().toList();
-		List<String> columns = Stream.of(lines.get(0).split(",")).toList();
-		List<String> firsCsvRow = Stream.of(lines.get(1).split(",")).toList();
+		List<String> lines = csv.lines()
+				.toList();
+		List<String> columns = Stream.of(lines.get(0)
+				.split(","))
+				.toList();
+		List<FieldValue> firsCsvRow = Stream.of(lines.get(1)
+				.split(","))
+				.map(cell -> FieldValue.of(cell))
+				.toList();
 
 		Row firstRow = Row.of(firsCsvRow)
 				.withColumns(columns);
 
-		for (int index = 0; index < columns.size(); index++) {
+		for (int index = 0; index < columns.size(); index++)
+		{
 			String currentColumn = columns.get(index);
-			String currentValue = firsCsvRow.get(index);
+			FieldValue currentValue = firsCsvRow.get(index);
 
-			assertThat(firstRow.get(currentColumn)).isEqualTo(currentValue);
+			assertThat(firstRow.get(currentColumn)).isEqualTo(currentValue.<String>get());
 		}
 	}
 
 	@Test
-	void should_not_build_row_if_columnssize_and_fieldssize_differ() throws IOException {
+	void should_not_build_row_if_columnssize_and_fieldssize_differ() throws IOException
+	{
 		val csv = Files.readString(Path.of("src/test/resources/cities.csv"));
 
-		List<String> lines = csv.lines().toList();
-		List<String> columns = Stream.of(lines.get(0).split(",")).toList();
-		List<String> firsCsvRow = Stream.of(lines.get(1).split(",")).toList();
+		List<String> lines = csv.lines()
+				.toList();
+		List<String> columns = Stream.of(lines.get(0)
+				.split(","))
+				.toList();
+		List<FieldValue> firsCsvRow = Stream.of(lines.get(1)
+				.split(","))
+				.map(cell -> FieldValue.of(cell))
+				.toList();
 		List<String> tooManyColumns = new ArrayList<>(columns);
 		tooManyColumns.add("something unexpected");
 
@@ -49,11 +65,37 @@ public class RowTest {
 	}
 
 	@Test
-	void transform_row() throws IOException {
-		Row row = Row.of(List.of("id1", "42")).withColumns(List.of("id", "value"));
-		
-		row = row.transform("value", value -> "" + Integer.parseInt(value) * 2);
+	void transform_row() throws IOException
+	{
+		Row row = Row.of(List.of(FieldValue.of("id1"), FieldValue.of("42")))
+				.withColumns(List.of("id", "value"));
+
+		row = row.transform("value",
+							value -> FieldValue.of("" + Integer.parseInt(value.<String>get()) * 2));
 
 		assertThat(row.get("value")).isEqualTo("84");
+	}
+
+	@Test
+	void equals() throws IOException
+	{
+		Row row = Row.of(List.of(FieldValue.of("id1"), FieldValue.of("42")))
+				.withColumns(List.of("id", "value"));
+
+		Row row2 = Row.of(List.of(FieldValue.of("id1"), FieldValue.of("42")))
+				.withColumns(List.of("id", "value"));
+
+		Row row3 = Row.of(List.of(FieldValue.of("id1"), FieldValue.of("47")))
+				.withColumns(List.of("id", "value"));
+
+		assertThat(row).isEqualTo(row2);
+		assertThat(row).isNotEqualTo(row3);
+
+		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv")
+			.withDelimiter(",")
+			.withHeaders()
+			.read();
+
+		assertThat(dataset.row(0)).isEqualTo(dataset.row(1));
 	}
 }

@@ -11,15 +11,37 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import jez.builders.DataType;
 
-public class DataFrameTest {
-	private static final String CITY = " \"City\"";
-	private static final String LAT_D = "\"LatD\"";
+public class DataFrameTest
+{
+	private static final String CITY = "City";
+	private static final String LAT_D = "LatD";
+
+	private static DataFrame readCsv() throws IOException
+	{
+		return DataFrame.fromCsv("src/test/resources/cities.csv")
+				.withDelimiter(",")
+				.withHeaders()
+				.read();
+	}
+
+	private static DataFrame readCsvWithTypes() throws IOException
+	{
+		return DataFrame.fromCsv("src/test/resources/cities.csv")
+				.withDelimiter(",")
+				.withHeaders()
+				.with(LAT_D).as(DataType.INTEGER)
+				.with("LatM").as(DataType.DOUBLE)
+				.read();
+	}
 
 	BiFunction<List<String>, List<String>, List<Row>> linesToRows = (myLines, myColumns) -> {
 		List<Row> rows = new ArrayList<>();
-		for (String line : myLines) {
-			List<String> fields = Stream.of(line.split(","))
+		for (String line : myLines)
+		{
+			List<FieldValue> fields = Stream.of(line.split(","))
+					.map(cell -> FieldValue.of(cell))
 					.toList();
 			Row newRow = Row.of(fields)
 					.withColumns(myColumns);
@@ -34,7 +56,8 @@ public class DataFrameTest {
 	};
 
 	@Test
-	void loading_a_dataset_of_rows_from_csv() throws IOException {
+	void loading_a_dataset_of_rows_from_csv() throws IOException
+	{
 		String csv = Files.readString(Path.of("src/test/resources/cities.csv"));
 
 		List<String> lines = csv.lines()
@@ -42,13 +65,14 @@ public class DataFrameTest {
 		List<String> columns = Stream.of(lines.get(0)
 				.split(","))
 				.toList();
-		List<String> firstCsvRow = Stream.of(lines.get(1)
+		List<FieldValue> firstCsvRow = Stream.of(lines.get(1)
 				.split(","))
+				.map(cell -> FieldValue.of(cell))
 				.toList();
 		List<Row> rows = linesToRows.andThen(removeHeaders)
 				.apply(lines, columns);
 
-		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
+		DataFrame dataset = readCsv();
 
 		assertThat(dataset.size()).isEqualTo(rows.size());
 
@@ -61,7 +85,39 @@ public class DataFrameTest {
 	}
 
 	@Test
-	void select_columns() throws IOException {
+	void csv_without_headers() throws IOException
+	{
+		DataFrame dataFrame = DataFrame.fromCsv("src/test/resources/cities_no_headers.csv")
+				.withDelimiter(",")
+				.withoutHeaders()
+				.read();
+
+		assertThat(dataFrame.size()).isEqualTo(129);
+	}
+
+	@Test
+	void csv_with_typed_columns() throws IOException
+	{
+		DataFrame dataFrame = DataFrame.fromCsv("src/test/resources/cities.csv")
+				.withDelimiter(",")
+				.withHeaders()
+				.with("LatD")
+				.as(DataType.INTEGER)
+				.with("LatM")
+				.as(DataType.DOUBLE)
+				.read();
+
+		assertThat(dataFrame.row(0)
+				.get("LatD")
+				.<Integer>get()).isEqualTo(41);
+		assertThat(dataFrame.row(0)
+				.get("LatM")
+				.<Double>get()).isEqualTo(5.0);
+	}
+
+	@Test
+	void select_columns() throws IOException
+	{
 		String csv = Files.readString(Path.of("src/test/resources/cities.csv"));
 		List<String> lines = csv.lines()
 				.toList();
@@ -72,7 +128,7 @@ public class DataFrameTest {
 				.split(","))
 				.toList();
 
-		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
+		DataFrame dataset = readCsv();
 
 		assertThat(dataset.columns()).hasSameElementsAs(columns);
 
@@ -88,8 +144,9 @@ public class DataFrameTest {
 	}
 
 	@Test
-	void select_non_existing_columns() throws IOException {
-		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
+	void select_non_existing_columns() throws IOException
+	{
+		DataFrame dataset = readCsv();
 
 		assertThatThrownBy(() -> {
 			dataset.select("a non existing column");
@@ -97,11 +154,13 @@ public class DataFrameTest {
 	}
 
 	@Test
-	void filtering_lines() throws IOException {
-		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
+	void filtering_lines() throws IOException
+	{
+		DataFrame dataset = readCsv();
 
 		String aCity = dataset.row(42)
-				.get(CITY);
+				.get(CITY)
+				.<String>get();
 
 		DataFrame filtered = dataset.where(row -> row.get(CITY)
 				.equals(aCity));
@@ -112,8 +171,9 @@ public class DataFrameTest {
 	}
 
 	@Test
-	void unique_on_all_columns() throws IOException {
-		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
+	void unique_on_all_columns() throws IOException
+	{
+		DataFrame dataset = readCsv();
 
 		assertThat(dataset.size()).isEqualTo(129);
 
@@ -125,8 +185,9 @@ public class DataFrameTest {
 	}
 
 	@Test
-	void unique_on_given_column() throws IOException {
-		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
+	void unique_on_given_column() throws IOException
+	{
+		DataFrame dataset = readCsv();
 
 		assertThat(dataset.size()).isEqualTo(129);
 
@@ -140,32 +201,36 @@ public class DataFrameTest {
 	}
 
 	@Test
-	void map() throws IOException {
-		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
+	void map() throws IOException
+	{
+		DataFrame dataset = readCsv();
 
 		dataset = dataset.map(row -> row
-				.transform(LAT_D, value -> "" + Integer.parseInt(value.strip()) * 2));
+				.transform(	LAT_D,
+							value -> FieldValue.of("" + Integer.parseInt(value.<String>get()
+									.strip()) * 2)));
 
 		assertThat(dataset.row(0)
 				.get(LAT_D)).isEqualTo("82");
 	}
 
 	@Test
-	void reduce() throws IOException {
-		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv", ",");
+	void reduce() throws IOException
+	{
+		DataFrame dataset = readCsvWithTypes();
 
-		String columnSum = dataset.reduce(
-				(accumulator, row) -> accumulator.transform(
-						LAT_D, 
-						value -> "" + (
-							Integer.parseInt(value.strip()) + 
-							Integer.parseInt(row.get(LAT_D).strip())
-						)
-				)
-		)
-		.get()
-		.get(LAT_D);
+		Integer columnSum = dataset.reduce(
+											(accumulator, row) -> accumulator.transform(
+																						LAT_D,
+																						value -> FieldValue
+																								.of(value
+																										.<Integer>get()
+																										+ row.get(LAT_D)
+																												.<Integer>get())))
+				.get()
+				.get(LAT_D)
+				.<Integer>get();
 
-		assertThat(columnSum).isEqualTo("5010");
+		assertThat(columnSum).isEqualTo(5010);
 	}
 }
