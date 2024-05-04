@@ -2,20 +2,25 @@ package jez;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import jez.builders.CsvDataFrameBuilder;
 import jez.builders.DataFrameBuilder;
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
-public class DataFrame
+// @RequiredArgsConstructor
+public class DataFrame extends DataSet<Row>
 {
-	private final List<Row> rows;
+	// private final List<Row> rows;
 	private final List<String> columns;
+
+	private final DataOperator dataOperator = DataOperator.instance();
+
+	public DataFrame(List<Row> rows, List<String> columns)
+	{
+		super(rows);
+		this.columns = columns;
+	}
 
 	public static DataFrameBuilder of(List<Row> rows)
 	{
@@ -25,16 +30,6 @@ public class DataFrame
 	public static CsvDataFrameBuilder fromCsv(String path) throws IOException
 	{
 		return new CsvDataFrameBuilder(path);
-	}
-
-	public int size()
-	{
-		return rows.size();
-	}
-
-	public Row row(int index)
-	{
-		return rows.get(index);
 	}
 
 	public List<String> columns()
@@ -58,11 +53,6 @@ public class DataFrame
 				.toList();
 		return DataFrame.of(projectedRows)
 				.with(chosenColumns);
-	}
-
-	public List<Row> rows()
-	{
-		return this.rows;
 	}
 
 	@Override
@@ -103,42 +93,30 @@ public class DataFrame
 		return builder.toString();
 	}
 
+	@Override
 	public DataFrame where(Predicate<Row> predicate)
 	{
-		List<Row> filtered = rows().stream()
-				.filter(predicate)
-				.toList();
-		return DataFrame.of(filtered)
+		return DataFrame.of(super.where(predicate).rows())
 				.with(columns);
 	}
 
+	@Override
 	public DataFrame unique()
 	{
-		return DataFrame.of(rows.stream()
-				.distinct()
-				.toList())
+		return DataFrame.of(super.unique().rows())
 				.with(columns);
 	}
 
 	public DataFrame unique(String on)
 	{
-		return this.select(on)
+		return (DataFrame) this.select(on)
 				.unique();
 	}
 
+	@Override
 	public DataFrame map(Function<Row, Row> mapping)
 	{
-
-		return DataFrame.of(rows.stream()
-				.map(mapping)
-				.toList())
+		return DataFrame.of(super.map(mapping).rows())
 				.with(columns);
-	}
-
-	public Optional<Row> reduce(BinaryOperator<Row> accumulator)
-	{
-		return this.rows()
-				.stream()
-				.reduce(accumulator);
 	}
 }
