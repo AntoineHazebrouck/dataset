@@ -8,10 +8,8 @@ import java.util.stream.Stream;
 import jez.builders.CsvDataFrameBuilder;
 import jez.builders.DataFrameBuilder;
 
-// @RequiredArgsConstructor
 public class DataFrame extends DataSet<Row>
 {
-	// private final List<Row> rows;
 	private final List<String> columns;
 
 	private final DataOperator dataOperator = DataOperator.instance();
@@ -58,39 +56,7 @@ public class DataFrame extends DataSet<Row>
 	@Override
 	public String toString()
 	{
-
-		StringBuilder builder = new StringBuilder();
-		Runnable newLine = () -> builder.append("\n");
-
-		String horizontal = this.columns()
-				.stream()
-				.map(col -> "-".repeat(col.length()))
-				.reduce("", (acc, value) -> acc += value + "-");
-
-		builder.append(horizontal);
-		newLine.run();
-		for (String column : this.columns())
-		{
-			builder.append("|");
-			builder.append(column);
-		}
-		builder.append("|");
-		newLine.run();
-
-		builder.append(horizontal);
-		newLine.run();
-
-		for (Row row : this.rows())
-		{
-			for (String column : this.columns())
-			{
-				builder.append("|");
-				builder.append(row.get(column));
-			}
-			builder.append("|");
-			newLine.run();
-		}
-		return builder.toString();
+		return dataOperator.toString(this);
 	}
 
 	@Override
