@@ -10,7 +10,9 @@ import java.util.function.Function;
 import jez.builders.RowBuilder;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
+@ToString
 @RequiredArgsConstructor
 @EqualsAndHashCode
 public class Row

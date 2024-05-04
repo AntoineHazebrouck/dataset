@@ -52,4 +52,9 @@ public class FieldValue
 		return true;
 	}
 
+	@Override
+	public String toString()
+	{
+		return value.toString();
+	}
 }
