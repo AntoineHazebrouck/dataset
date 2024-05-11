@@ -3,8 +3,6 @@ package jez;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -12,6 +10,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import jez.builders.DataType;
+import jez.utils.ClasspathFileReader;
 
 public class DataFrameTest
 {
@@ -20,7 +19,7 @@ public class DataFrameTest
 
 	private static DataFrame readCsv() throws IOException
 	{
-		return DataFrame.fromCsv("src/test/resources/cities.csv")
+		return DataFrame.fromCsv("cities.csv")
 				.withDelimiter(",")
 				.withHeaders()
 				.read();
@@ -28,11 +27,13 @@ public class DataFrameTest
 
 	private static DataFrame readCsvWithTypes() throws IOException
 	{
-		return DataFrame.fromCsv("src/test/resources/cities.csv")
+		return DataFrame.fromCsv("cities.csv")
 				.withDelimiter(",")
 				.withHeaders()
-				.with(LAT_D).as(DataType.INTEGER)
-				.with("LatM").as(DataType.DOUBLE)
+				.with(LAT_D)
+				.as(DataType.INTEGER)
+				.with("LatM")
+				.as(DataType.DOUBLE)
 				.read();
 	}
 
@@ -58,10 +59,9 @@ public class DataFrameTest
 	@Test
 	void loading_a_dataset_of_rows_from_csv() throws IOException
 	{
-		String csv = Files.readString(Path.of("src/test/resources/cities.csv"));
+		List<String> lines = ClasspathFileReader.instance()
+				.readLines("cities.csv");
 
-		List<String> lines = csv.lines()
-				.toList();
 		List<String> columns = Stream.of(lines.get(0)
 				.split(","))
 				.toList();
@@ -87,18 +87,24 @@ public class DataFrameTest
 	@Test
 	void csv_without_headers() throws IOException
 	{
-		DataFrame dataFrame = DataFrame.fromCsv("src/test/resources/cities_no_headers.csv")
+		DataFrame dataFrame = DataFrame.fromCsv("cities_no_headers.csv")
 				.withDelimiter(",")
 				.withoutHeaders()
 				.read();
 
 		assertThat(dataFrame.size()).isEqualTo(129);
+
+		assertThat(dataFrame.columns()).hasSize(10);
+		assertThat(dataFrame.columns()
+				.get(0)).isEqualTo("Column 0");
+		assertThat(dataFrame.columns()
+				.get(9)).isEqualTo("Column 9");
 	}
 
 	@Test
 	void csv_with_typed_columns() throws IOException
 	{
-		DataFrame dataFrame = DataFrame.fromCsv("src/test/resources/cities.csv")
+		DataFrame dataFrame = DataFrame.fromCsv("cities.csv")
 				.withDelimiter(",")
 				.withHeaders()
 				.with("LatD")
@@ -118,9 +124,9 @@ public class DataFrameTest
 	@Test
 	void select_columns() throws IOException
 	{
-		String csv = Files.readString(Path.of("src/test/resources/cities.csv"));
-		List<String> lines = csv.lines()
-				.toList();
+		List<String> lines = ClasspathFileReader.instance()
+				.readLines("cities.csv");
+
 		List<String> firstCsvRow = Stream.of(lines.get(1)
 				.split(","))
 				.toList();

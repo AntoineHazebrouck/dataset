@@ -1,33 +1,36 @@
 package jez;
 
 import java.io.IOException;
-import jez.builders.DataType;
+import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 public class Application
 {
-
+	private static LocalDateTime time()
+	{
+		return LocalDateTime.now();
+	}
+	
 	public static void main(String[] args) throws IOException
 	{
-		DataFrame dataFrame = DataFrame.fromCsv("src/test/resources/cities.csv")
-			.withHeaders()
-			.withDelimiter(",")
-			.with("LatD").as(DataType.INTEGER)
-			.with("LatM").as(DataType.INTEGER)
-			.with("LatS").as(DataType.INTEGER)
-			.with("NS").as(DataType.STRING)
-			.with("LonD").as(DataType.INTEGER)
-			.with("LonM").as(DataType.INTEGER)
-			.with("LonS").as(DataType.INTEGER)
-			.with("EW").as(DataType.STRING)
-			.with("City").as(DataType.STRING)
-			.with("State").as(DataType.STRING)
-			.read();
+		final DataFrame dataFrame = DataFrame
+				.fromCsv("geographic-units-by-industry-and-statistical-area-2000-2023-descending-order-february-2023.csv")
+				.withDelimiter(",")
+				.withHeaders()
+				.read();
 
-		System.out.println(dataFrame.columns());
-		System.out.println(dataFrame.select("State", "City").row(0));
-		System.out.println(dataFrame.size());
-		dataFrame = dataFrame.where(row -> row.get("State").<String>get().contains("OH"));
-		System.out.println(dataFrame.size());
+		LocalDateTime start = time();
+
+		DataFrame filtered = dataFrame.where(row -> row.get("anzsic06")
+				.equals("S942") &&
+				row.get("Area")
+						.equals("A141700"));
+
+		LocalDateTime end = time();
+
+		System.out.println("New size : " + filtered.size());
+		System.out.println("Computing time : " + ChronoUnit.MILLIS.between(start, end));
 	}
 
 }

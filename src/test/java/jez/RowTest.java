@@ -3,23 +3,20 @@ package jez;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
-import lombok.val;
+import jez.utils.ClasspathFileReader;
 
 public class RowTest
 {
 	@Test
 	void row_from_a_line() throws IOException
 	{
-		val csv = Files.readString(Path.of("src/test/resources/cities.csv"));
+		List<String> lines = ClasspathFileReader.instance()
+				.readLines("cities.csv");
 
-		List<String> lines = csv.lines()
-				.toList();
 		List<String> columns = Stream.of(lines.get(0)
 				.split(","))
 				.toList();
@@ -43,10 +40,9 @@ public class RowTest
 	@Test
 	void should_not_build_row_if_columnssize_and_fieldssize_differ() throws IOException
 	{
-		val csv = Files.readString(Path.of("src/test/resources/cities.csv"));
+		List<String> lines = ClasspathFileReader.instance()
+				.readLines("cities.csv");
 
-		List<String> lines = csv.lines()
-				.toList();
 		List<String> columns = Stream.of(lines.get(0)
 				.split(","))
 				.toList();
@@ -91,10 +87,10 @@ public class RowTest
 		assertThat(row).isEqualTo(row2);
 		assertThat(row).isNotEqualTo(row3);
 
-		DataFrame dataset = DataFrame.fromCsv("src/test/resources/cities.csv")
-			.withDelimiter(",")
-			.withHeaders()
-			.read();
+		DataFrame dataset = DataFrame.fromCsv("cities.csv")
+				.withDelimiter(",")
+				.withHeaders()
+				.read();
 
 		assertThat(dataset.row(0)).isEqualTo(dataset.row(1));
 	}

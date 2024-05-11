@@ -1,17 +1,15 @@
 package jez.builders;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import jez.DataFrame;
 import jez.FieldValue;
 import jez.Row;
+import jez.utils.ClasspathFileReader;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -47,71 +45,61 @@ public class CsvDataFrameBuilder
 
 	public DataFrame read() throws IOException
 	{
-		String csv = Files.readString(Path.of(path));
-		List<String> lines = new ArrayList<>(csv.lines()
-				.toList());
-		List<String> columns = Stream.of(lines.get(0)
-				.split(delimiter))
+		List<String> allLines = ClasspathFileReader.instance().readLines(path);
+
+		
+		List<String> columns;
+		List<String> lines = allLines;
+		if (headers)
+		{
+			columns = Stream.of(allLines.get(0)
+					.split(delimiter))
+					.toList();
+
+			lines.remove(0);
+		} else
+		{
+			// default column names
+			columns = IntStream.range(	0,
+										allLines.get(0)
+												.split(delimiter).length)
+					.mapToObj(number -> "Column " + number)
+					.toList();
+		}
+
+		List<Row> rows = lines.stream()
+				.map(line -> {
+					List<String> cells = Stream.of(line.split(delimiter))
+							.toList();
+
+					Map<String, FieldValue> rowData = new HashMap<>();
+					for (int index = 0; index < cells.size(); index++)
+					{
+						String currentValue = cells.get(index);
+						String currentColumn = columns.get(index);
+
+						FieldValue field = getTypedField(currentColumn, currentValue);
+						rowData.put(currentColumn, field);
+					}
+
+					return new Row(rowData);
+				})
 				.toList();
-
-
-		BiFunction<List<String>, List<String>, List<Row>> linesToRows =
-				(myLines, myColumns) -> {
-					if (headers)
-					{
-						myLines.remove(0);
-					}
-					List<Row> rows = new ArrayList<>();
-					for (String line : myLines)
-					{
-						List<FieldValue> fields = Stream.of(line.split(delimiter))
-								.map(cell -> FieldValue.of(cell))
-								.toList();
-						Map<String, FieldValue> data = new HashMap<>();
-						for (int index = 0; index < fields.size(); index++)
-						{
-							String currentColumn = columns.get(index);
-							FieldValue currentField;
-							if (columnTypes.containsKey(currentColumn))
-							{
-								String value = fields.get(index)
-										.<String>get();
-
-								switch (columnTypes.get(currentColumn))
-								{
-									case INTEGER:
-										currentField =
-												FieldValue.of(Integer.parseInt(value.strip()));
-										break;
-									case DOUBLE:
-										currentField =
-												FieldValue.of(Double.parseDouble(value.strip()));
-										break;
-									// case STRING:
-									// currentField = FieldValue.of(value);
-									// break;
-									default:
-										currentField = FieldValue.of(value);
-										break;
-								}
-							} else
-							{
-								currentField = fields.get(index);
-							}
-
-							data.put(currentColumn, currentField);
-						}
-						Row newRow = new Row(data);
-						rows.add(newRow);
-					}
-					return rows;
-				};
-
-		List<Row> rows = linesToRows
-				.apply(lines, columns);
-
 
 		return DataFrame.of(rows)
 				.with(columns);
+	}
+
+	private FieldValue getTypedField(String currentColumn, String currentValue)
+	{
+		switch (columnTypes.getOrDefault(currentColumn, DataType.STRING))
+		{
+			case INTEGER:
+				return FieldValue.of(Integer.parseInt(currentValue.strip()));
+			case DOUBLE:
+				return FieldValue.of(Double.parseDouble(currentValue.strip()));
+			default:
+				return FieldValue.of(currentValue);
+		}
 	}
 }

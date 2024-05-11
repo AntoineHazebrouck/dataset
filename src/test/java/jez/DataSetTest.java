@@ -4,14 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import lombok.Data;
+import jez.pojos.Person;
 
 public class DataSetTest {
-	@Data
-	private static class Person {
-		private final String firstname;
-		private final String lastname;
-	}
 
 	@Test
 	void init_dataset() {
