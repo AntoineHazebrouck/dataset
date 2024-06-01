@@ -10,6 +10,9 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import jez.builders.DataType;
+import jez.data.DataFrame;
+import jez.data.FieldValue;
+import jez.data.Row;
 import jez.utils.ClasspathFileReader;
 
 public class DataFrameTest

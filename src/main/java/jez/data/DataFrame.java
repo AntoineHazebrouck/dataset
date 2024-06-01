@@ -1,4 +1,4 @@
-package jez;
+package jez.data;
 
 import java.io.IOException;
 import java.util.List;

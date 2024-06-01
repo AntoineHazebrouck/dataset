@@ -1,4 +1,4 @@
-package jez;
+package jez.data;
 
 import java.util.Objects;
 import lombok.AccessLevel;

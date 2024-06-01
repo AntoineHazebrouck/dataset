@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import jez.DataFrame;
-import jez.FieldValue;
-import jez.Row;
+import jez.data.DataFrame;
+import jez.data.FieldValue;
+import jez.data.Row;
 import jez.utils.ClasspathFileReader;
 import lombok.RequiredArgsConstructor;
 

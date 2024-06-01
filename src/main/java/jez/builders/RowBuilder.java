@@ -3,8 +3,8 @@ package jez.builders;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import jez.FieldValue;
-import jez.Row;
+import jez.data.FieldValue;
+import jez.data.Row;
 
 public class RowBuilder
 {

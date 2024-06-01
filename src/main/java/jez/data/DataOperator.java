@@ -1,4 +1,4 @@
-package jez;
+package jez.data;
 
 public class DataOperator
 {

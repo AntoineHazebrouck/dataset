@@ -1,8 +1,8 @@
 package jez.builders;
 
 import java.util.List;
-import jez.DataFrame;
-import jez.Row;
+import jez.data.DataFrame;
+import jez.data.Row;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
